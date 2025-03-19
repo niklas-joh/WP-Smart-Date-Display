@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Smart Date Display
  * Description: A flexible WordPress plugin that displays dates in relative or absolute format with customizable prefixes, suffixes, and multilingual support
- * Version: 0.0.02
+ * Version: 1.0
  * Author: Niklas Johansson
  * Author URI: https://github.com/niklas-joh
  * Plugin URI: https://github.com/niklas-joh/WP-Smart-Date-Display
@@ -41,193 +41,193 @@ class Smart_Date_Display {
         );
     }
 
-/**
- * Enqueue scripts for the admin area
- */
-public function enqueue_admin_scripts($hook) {
-    if ('post.php' !== $hook && 'post-new.php' !== $hook) {
-        return;
-    }
-    
-    // Enqueue block editor script
-    wp_enqueue_script(
-        'smart-date-admin-script',
-        plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
-        array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor', 'wp-i18n'),
-        '1.0',
-        true
-    );
-    
-    // Enqueue custom editor styles
-    wp_enqueue_style(
-        'smart-date-editor-style',
-        plugin_dir_url(__FILE__) . 'assets/css/editor-style.css',
-        array(),
-        '1.0'
-    );
-    
-    // Register the block script for translations
-    if (function_exists('wp_set_script_translations')) {
-        wp_set_script_translations('smart-date-admin-script', 'smart-date-display');
-    }
-}
-
     /**
- * Register the Gutenberg block
- */
-public function register_block() {
-    // Only register block if Gutenberg is available
-    if (function_exists('register_block_type')) {
-        register_block_type('smart-date-display/date-block', array(
-            'editor_script' => 'smart-date-admin-script',
-            'render_callback' => array($this, 'render_block'),
-            'attributes' => array(
-                'date' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'displayType' => array(
-                    'type' => 'string',
-                    'default' => 'relative'
-                ),
-                'format' => array(
-                    'type' => 'string',
-                    'default' => 'Y-m-d H:i'
-                ),
-                'prefix' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'suffix' => array(
-                    'type' => 'string',
-                    'default' => 'ago'
-                ),
-                'locale' => array(
-                    'type' => 'string',
-                    'default' => 'en'
-                ),
-                // Style attributes
-                'textColor' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'backgroundColor' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'fontSize' => array(
-                    'type' => 'number',
-                    'default' => 16
-                ),
-                'textAlign' => array(
-                    'type' => 'string',
-                    'default' => 'left'
-                ),
-                'padding' => array(
-                    'type' => 'number',
-                    'default' => 0
-                ),
-                'margin' => array(
-                    'type' => 'number',
-                    'default' => 0
-                ),
-                'borderWidth' => array(
-                    'type' => 'number',
-                    'default' => 0
-                ),
-                'borderRadius' => array(
-                    'type' => 'number',
-                    'default' => 0
-                ),
-                'borderColor' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'isBold' => array(
-                    'type' => 'boolean',
-                    'default' => false
-                ),
-                'isItalic' => array(
-                    'type' => 'boolean',
-                    'default' => false
-                )
-            )
-        ));
-    }
-}
-
-/**
- * Render the Gutenberg block
- */
-public function render_block($attributes) {
-    // Convert block attributes to shortcode attributes
-    $atts = array(
-        'date' => $attributes['date'] ?? '',
-        'display_type' => $attributes['displayType'] ?? 'relative',
-        'format' => $attributes['format'] ?? 'Y-m-d H:i',
-        'prefix' => $attributes['prefix'] ?? '',
-        'suffix' => $attributes['suffix'] ?? 'ago',
-        'locale' => $attributes['locale'] ?? 'en'
-    );
-
-    // Get the formatted date content
-    $date_content = $this->relative_date_shortcode($atts);
-    
-    // Build inline styles from attributes
-    $style = '';
-    
-    // Text formatting
-    if (!empty($attributes['textColor'])) {
-        $style .= 'color:' . esc_attr($attributes['textColor']) . ';';
-    }
-    if (!empty($attributes['backgroundColor'])) {
-        $style .= 'background-color:' . esc_attr($attributes['backgroundColor']) . ';';
-    }
-    if (!empty($attributes['fontSize'])) {
-        $style .= 'font-size:' . esc_attr($attributes['fontSize']) . 'px;';
-    }
-    if (!empty($attributes['textAlign'])) {
-        $style .= 'text-align:' . esc_attr($attributes['textAlign']) . ';';
-    }
-    
-    // Font weight and style
-    if (isset($attributes['isBold']) && $attributes['isBold']) {
-        $style .= 'font-weight:bold;';
-    }
-    if (isset($attributes['isItalic']) && $attributes['isItalic']) {
-        $style .= 'font-style:italic;';
-    }
-    
-    // Spacing
-    if (isset($attributes['padding']) && is_numeric($attributes['padding'])) {
-        $style .= 'padding:' . esc_attr($attributes['padding']) . 'px;';
-    }
-    if (isset($attributes['margin']) && is_numeric($attributes['margin'])) {
-        $style .= 'margin:' . esc_attr($attributes['margin']) . 'px;';
-    }
-    
-    // Border
-    if (isset($attributes['borderWidth']) && $attributes['borderWidth'] > 0) {
-        $style .= 'border-width:' . esc_attr($attributes['borderWidth']) . 'px;';
-        $style .= 'border-style:solid;';
+     * Enqueue scripts for the admin area
+     */
+    public function enqueue_admin_scripts($hook) {
+        if ('post.php' !== $hook && 'post-new.php' !== $hook) {
+            return;
+        }
         
-        if (!empty($attributes['borderColor'])) {
-            $style .= 'border-color:' . esc_attr($attributes['borderColor']) . ';';
-        } else {
-            $style .= 'border-color:#ddd;';
+        // Enqueue block editor script
+        wp_enqueue_script(
+            'smart-date-admin-script',
+            plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
+            array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor', 'wp-i18n'),
+            '1.0',
+            true
+        );
+        
+        // Enqueue custom editor styles
+        wp_enqueue_style(
+            'smart-date-editor-style',
+            plugin_dir_url(__FILE__) . 'assets/css/editor-style.css',
+            array(),
+            '1.0'
+        );
+        
+        // Register the block script for translations
+        if (function_exists('wp_set_script_translations')) {
+            wp_set_script_translations('smart-date-admin-script', 'smart-date-display');
         }
     }
-    if (isset($attributes['borderRadius']) && is_numeric($attributes['borderRadius'])) {
-        $style .= 'border-radius:' . esc_attr($attributes['borderRadius']) . 'px;';
+
+    /**
+     * Register the Gutenberg block
+     */
+    public function register_block() {
+        // Only register block if Gutenberg is available
+        if (function_exists('register_block_type')) {
+            register_block_type('smart-date-display/date-block', array(
+                'editor_script' => 'smart-date-admin-script',
+                'render_callback' => array($this, 'render_block'),
+                'attributes' => array(
+                    'date' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'displayType' => array(
+                        'type' => 'string',
+                        'default' => 'relative'
+                    ),
+                    'format' => array(
+                        'type' => 'string',
+                        'default' => 'Y-m-d H:i'
+                    ),
+                    'prefix' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'suffix' => array(
+                        'type' => 'string',
+                        'default' => 'ago'
+                    ),
+                    'locale' => array(
+                        'type' => 'string',
+                        'default' => 'en'
+                    ),
+                    // Style attributes
+                    'textColor' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'backgroundColor' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'fontSize' => array(
+                        'type' => 'number',
+                        'default' => 16
+                    ),
+                    'textAlign' => array(
+                        'type' => 'string',
+                        'default' => 'left'
+                    ),
+                    'padding' => array(
+                        'type' => 'number',
+                        'default' => 0
+                    ),
+                    'margin' => array(
+                        'type' => 'number',
+                        'default' => 0
+                    ),
+                    'borderWidth' => array(
+                        'type' => 'number',
+                        'default' => 0
+                    ),
+                    'borderRadius' => array(
+                        'type' => 'number',
+                        'default' => 0
+                    ),
+                    'borderColor' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'isBold' => array(
+                        'type' => 'boolean',
+                        'default' => false
+                    ),
+                    'isItalic' => array(
+                        'type' => 'boolean',
+                        'default' => false
+                    )
+                )
+            ));
+        }
     }
-    
-    // Output the styled date display
-    if (!empty($style)) {
-        return '<span class="smart-date-display" style="' . $style . '">' . $date_content . '</span>';
-    } else {
-        return '<span class="smart-date-display">' . $date_content . '</span>';
+
+    /**
+     * Render the Gutenberg block
+     */
+    public function render_block($attributes) {
+        // Convert block attributes to shortcode attributes
+        $atts = array(
+            'date' => $attributes['date'] ?? '',
+            'display_type' => $attributes['displayType'] ?? 'relative',
+            'format' => $attributes['format'] ?? 'Y-m-d H:i',
+            'prefix' => $attributes['prefix'] ?? '',
+            'suffix' => $attributes['suffix'] ?? 'ago',
+            'locale' => $attributes['locale'] ?? 'en'
+        );
+
+        // Get the formatted date content
+        $date_content = $this->relative_date_shortcode($atts);
+        
+        // Build inline styles from attributes
+        $style = '';
+        
+        // Text formatting
+        if (!empty($attributes['textColor'])) {
+            $style .= 'color:' . esc_attr($attributes['textColor']) . ';';
+        }
+        if (!empty($attributes['backgroundColor'])) {
+            $style .= 'background-color:' . esc_attr($attributes['backgroundColor']) . ';';
+        }
+        if (!empty($attributes['fontSize'])) {
+            $style .= 'font-size:' . esc_attr($attributes['fontSize']) . 'px;';
+        }
+        if (!empty($attributes['textAlign'])) {
+            $style .= 'text-align:' . esc_attr($attributes['textAlign']) . ';';
+        }
+        
+        // Font weight and style
+        if (isset($attributes['isBold']) && $attributes['isBold']) {
+            $style .= 'font-weight:bold;';
+        }
+        if (isset($attributes['isItalic']) && $attributes['isItalic']) {
+            $style .= 'font-style:italic;';
+        }
+        
+        // Spacing
+        if (isset($attributes['padding']) && is_numeric($attributes['padding'])) {
+            $style .= 'padding:' . esc_attr($attributes['padding']) . 'px;';
+        }
+        if (isset($attributes['margin']) && is_numeric($attributes['margin'])) {
+            $style .= 'margin:' . esc_attr($attributes['margin']) . 'px;';
+        }
+        
+        // Border
+        if (isset($attributes['borderWidth']) && $attributes['borderWidth'] > 0) {
+            $style .= 'border-width:' . esc_attr($attributes['borderWidth']) . 'px;';
+            $style .= 'border-style:solid;';
+            
+            if (!empty($attributes['borderColor'])) {
+                $style .= 'border-color:' . esc_attr($attributes['borderColor']) . ';';
+            } else {
+                $style .= 'border-color:#ddd;';
+            }
+        }
+        if (isset($attributes['borderRadius']) && is_numeric($attributes['borderRadius'])) {
+            $style .= 'border-radius:' . esc_attr($attributes['borderRadius']) . 'px;';
+        }
+        
+        // Output the styled date display
+        if (!empty($style)) {
+            return '<span class="smart-date-display" style="' . $style . '">' . $date_content . '</span>';
+        } else {
+            return '<span class="smart-date-display">' . $date_content . '</span>';
+        }
     }
-}
 
     /**
      * Converts a timestamp into a human-readable relative date string based on locale

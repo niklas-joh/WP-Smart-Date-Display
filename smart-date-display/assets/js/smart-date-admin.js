@@ -1,3 +1,4 @@
+console.log('Smart Date Display block script loaded');
 const { registerBlockType } = wp.blocks;
 const { InspectorControls, PanelColorSettings } = wp.blockEditor;
 const { 
