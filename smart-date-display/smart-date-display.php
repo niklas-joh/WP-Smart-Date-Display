@@ -40,58 +40,66 @@ class Smart_Date_Display {
     /**
      * Enqueue scripts for the admin area
      */
-    public function enqueue_admin_scripts($hook) {
-        if ('post.php' !== $hook && 'post-new.php' !== $hook) {
-            return;
-        }
+	public function enqueue_admin_scripts($hook) {
+ 	   if ('post.php' !== $hook && 'post-new.php' !== $hook) {
+           return;
+	}
 
-        wp_enqueue_script(
-            'smart-date-admin-script',
-            plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
-            array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor'),
-            '1.0',
-            true
-        );
-    }
+    	wp_enqueue_script(
+        	'smart-date-admin-script',
+	        plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
+        	array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor', 'wp-i18n', 'wp-block-editor'),
+        	'1.0',
+        	true
+	    );
+
+	    // Register the editor style if needed
+    	wp_enqueue_style(
+        	'smart-date-editor-style',
+	        plugin_dir_url(__FILE__) . 'assets/css/editor-style.css',
+        	array(),
+        	'1.0'
+	    );
+	}
 
     /**
      * Register the Gutenberg block
      */
-    public function register_block() {
-        // Only register block if Gutenberg is available
-        if (function_exists('register_block_type')) {
-            register_block_type('smart-date-display/date-block', array(
-                'editor_script' => 'smart-date-admin-script',
-                'render_callback' => array($this, 'render_block'),
-                'attributes' => array(
-                    'date' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'displayType' => array(
-                        'type' => 'string',
-                        'default' => 'relative'
-                    ),
-                    'format' => array(
-                        'type' => 'string',
-                        'default' => 'Y-m-d H:i'
-                    ),
-                    'prefix' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'suffix' => array(
-                        'type' => 'string',
-                        'default' => 'ago'
-                    ),
-                    'locale' => array(
-                        'type' => 'string',
-                        'default' => 'en'
-                    )
+public function register_block() {
+    // Only register block if Gutenberg is available
+    if (function_exists('register_block_type')) {
+        register_block_type('smart-date-display/date-block', array(
+            'editor_script' => 'smart-date-admin-script',
+            'render_callback' => array($this, 'render_block'),
+            'attributes' => array(
+                'date' => array(
+                    'type' => 'string',
+                    'default' => ''
+                ),
+                'displayType' => array(
+                    'type' => 'string',
+                    'default' => 'relative'
+                ),
+                'format' => array(
+                    'type' => 'string',
+                    'default' => 'Y-m-d H:i'
+                ),
+                'prefix' => array(
+                    'type' => 'string',
+                    'default' => ''
+                ),
+                'suffix' => array(
+                    'type' => 'string',
+                    'default' => 'ago'
+                ),
+                'locale' => array(
+                    'type' => 'string',
+                    'default' => 'en'
                 )
-            ));
-        }
+            )
+        ));
     }
+}
 
     /**
      * Render the Gutenberg block

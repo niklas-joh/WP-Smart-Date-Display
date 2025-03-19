@@ -12,7 +12,7 @@ const { __ } = wp.i18n;
 registerBlockType('smart-date-display/date-block', {
     title: 'Smart Date Display',
     icon: 'calendar-alt',
-    category: 'common',
+    category: 'widgets',
     keywords: ['date', 'relative', 'time'],
     
     attributes: {
