@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "smart-date-display/date-block",
+  "title": "Smart Date Display",
+  "category": "widgets",
+  "icon": "calendar-alt",
+  "description": "Display dates in relative or absolute formats with customization options",
+  "keywords": ["date", "relative", "time"],
+  "version": "1.0.0",
+  "textdomain": "smart-date-display",
+  "editorScript": "file:./assets/js/smart-date-admin.js",
+  "editorStyle": "file:./assets/css/editor-style.css",
+  "attributes": {
+    "date": {
+      "type": "string",
+      "default": ""
+    },
+    "displayType": {
+      "type": "string",
+      "default": "relative"
+    },
+    "format": {
+      "type": "string",
+      "default": "Y-m-d H:i"
+    },
+    "prefix": {
+      "type": "string",
+      "default": ""
+    },
+    "suffix": {
+      "type": "string",
+      "default": "ago"
+    },
+    "locale": {
+      "type": "string",
+      "default": "en"
+    },
+    "textColor": {
+      "type": "string",
+      "default": ""
+    },
+    "backgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "fontSize": {
+      "type": "number",
+      "default": 16
+    },
+    "textAlign": {
+      "type": "string",
+      "default": "left"
+    },
+    "padding": {
+      "type": "number",
+      "default": 0
+    },
+    "margin": {
+      "type": "number",
+      "default": 0
+    },
+    "borderWidth": {
+      "type": "number",
+      "default": 0
+    },
+    "borderRadius": {
+      "type": "number",
+      "default": 0
+    },
+    "borderColor": {
+      "type": "string",
+      "default": ""
+    },
+    "isBold": {
+      "type": "boolean",
+      "default": false
+    },
+    "isItalic": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

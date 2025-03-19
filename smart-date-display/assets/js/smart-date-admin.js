@@ -1,6 +1,19 @@
+/**
+ * Smart Date Display Block Editor Script
+ * Uses the WordPress Block API
+ */
+
+// Log initialization
 console.log('Smart Date Display block script loaded');
+
+// Import WordPress dependencies
 const { registerBlockType } = wp.blocks;
-const { InspectorControls, PanelColorSettings } = wp.blockEditor;
+const { 
+    InspectorControls,
+    PanelColorSettings,
+    useBlockProps
+} = wp.blockEditor || wp.editor; // Fallback for WP < 5.8
+
 const { 
     PanelBody, 
     SelectControl, 
@@ -8,19 +21,21 @@ const {
     DateTimePicker,
     RangeControl,
     ToggleControl,
-    TabPanel,
-    FontSizePicker
+    TabPanel
 } = wp.components;
+
 const { Fragment } = wp.element;
 const { createElement: el } = wp.element;
 const { __ } = wp.i18n;
 
+// Register the block
 registerBlockType('smart-date-display/date-block', {
     title: 'Smart Date Display',
     icon: 'calendar-alt',
     category: 'widgets',
     keywords: ['date', 'relative', 'time'],
     
+    // Block attributes match the PHP registration
     attributes: {
         date: {
             type: 'string',
@@ -93,6 +108,7 @@ registerBlockType('smart-date-display/date-block', {
         }
     },
     
+    // Block edit function
     edit: function(props) {
         const { attributes, setAttributes } = props;
         const { 
@@ -100,6 +116,12 @@ registerBlockType('smart-date-display/date-block', {
             textColor, backgroundColor, fontSize, textAlign, padding, margin,
             borderWidth, borderRadius, borderColor, isBold, isItalic
         } = attributes;
+        
+        // Support for blockProps in newer WP versions
+        let blockProps = {};
+        if (typeof useBlockProps === 'function') {
+            blockProps = useBlockProps();
+        }
         
         // Function to preview the date format based on current settings
         const previewDate = () => {
@@ -112,10 +134,10 @@ registerBlockType('smart-date-display/date-block', {
             if (displayType === 'absolute') {
                 // This is just a basic preview - server-side will use proper formatting
                 const dateObj = new Date(timestamp * 1000);
-                return `${prefix} ${dateObj.toLocaleString()} ${suffix}`;
+                return `${prefix ? prefix + ' ' : ''}${dateObj.toLocaleString()}${suffix ? ' ' + suffix : ''}`;
             } else {
                 // Basic relative date preview
-                if (diff < 0) return `${prefix} Date is in the future ${suffix}`;
+                if (diff < 0) return `${prefix ? prefix + ' ' : ''}Date is in the future${suffix ? ' ' + suffix : ''}`;
                 
                 const seconds = diff;
                 const minutes = Math.floor(diff / 60);
@@ -125,13 +147,16 @@ registerBlockType('smart-date-display/date-block', {
                 const months = Math.floor(diff / 2592000);
                 const years = Math.floor(diff / 31536000);
                 
-                if (seconds < 60) return `${prefix} ${seconds} seconds ${suffix}`;
-                if (minutes < 60) return `${prefix} ${minutes} minute${minutes !== 1 ? 's' : ''} ${suffix}`;
-                if (hours < 24) return `${prefix} ${hours} hour${hours !== 1 ? 's' : ''} ${suffix}`;
-                if (days < 7) return `${prefix} ${days} day${days !== 1 ? 's' : ''} ${suffix}`;
-                if (weeks < 4) return `${prefix} ${weeks} week${weeks !== 1 ? 's' : ''} ${suffix}`;
-                if (months < 12) return `${prefix} ${months} month${months !== 1 ? 's' : ''} ${suffix}`;
-                return `${prefix} ${years} year${years !== 1 ? 's' : ''} ${suffix}`;
+                let timeText = '';
+                if (seconds < 60) timeText = `${seconds} second${seconds !== 1 ? 's' : ''}`;
+                else if (minutes < 60) timeText = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+                else if (hours < 24) timeText = `${hours} hour${hours !== 1 ? 's' : ''}`;
+                else if (days < 7) timeText = `${days} day${days !== 1 ? 's' : ''}`;
+                else if (weeks < 4) timeText = `${weeks} week${weeks !== 1 ? 's' : ''}`;
+                else if (months < 12) timeText = `${months} month${months !== 1 ? 's' : ''}`;
+                else timeText = `${years} year${years !== 1 ? 's' : ''}`;
+                
+                return `${prefix ? prefix + ' ' : ''}${timeText}${suffix ? ' ' + suffix : ''}`;
             }
         };
         
@@ -150,7 +175,7 @@ registerBlockType('smart-date-display/date-block', {
                 borderRadius: borderRadius + 'px',
                 fontWeight: isBold ? 'bold' : 'normal',
                 fontStyle: isItalic ? 'italic' : 'normal',
-                display: 'block'
+                display: 'inline-block'
             };
         };
         
@@ -184,8 +209,6 @@ registerBlockType('smart-date-display/date-block', {
                                     currentDate: date,
                                     onChange: (newDate) => setAttributes({ date: newDate }),
                                     is12Hour: false, // Use 24-hour format
-                                    isInvalidDate: () => false, // Allow all dates
-                                    firstDayOfWeek: 1 // Start week on Monday (0 = Sunday, 1 = Monday)
                                 })
                             )
                         ),
@@ -193,7 +216,7 @@ registerBlockType('smart-date-display/date-block', {
                         // Display Settings Panel
                         el(PanelBody, { 
                             title: "Display Settings", 
-                            initialOpen: false 
+                            initialOpen: true 
                         },
                             el(SelectControl, {
                                 label: "Display Type",
@@ -372,7 +395,8 @@ registerBlockType('smart-date-display/date-block', {
         // Create the clean preview display with applied styles
         const preview = el('div', { 
             className: 'smart-date-display',
-            style: getStyles()
+            style: getStyles(),
+            ...blockProps
         }, previewDate());
         
         // Return both the inspector controls and preview

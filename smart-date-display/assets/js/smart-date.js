@@ -1,14 +1,22 @@
+/**
+ * Smart Date Display Frontend Script
+ * Automatically updates relative dates on the frontend without page refresh
+ */
 jQuery(document).ready(function($) {
-    // Find all elements with the relative-date class and update them periodically
+    // Find all elements with the smart-date-display class and update them periodically
     function updateRelativeDates() {
-        $('.relative-date').each(function() {
+        $('.smart-date-display').each(function() {
             var $this = $(this);
             var timestamp = parseInt($this.data('timestamp'));
-            var displayType = $this.data('display-type');
-            var format = $this.data('format');
-            var prefix = $this.data('prefix');
-            var suffix = $this.data('suffix');
-            var locale = $this.data('locale');
+            
+            // Skip if no timestamp data
+            if (!timestamp || isNaN(timestamp)) return;
+            
+            // Get display attributes from data attributes if available
+            var displayType = $this.data('display-type') || 'relative';
+            var prefix = $this.data('prefix') || '';
+            var suffix = $this.data('suffix') || 'ago';
+            var locale = $this.data('locale') || 'en';
             
             // Only update if it's a relative date
             if (displayType === 'relative') {
@@ -38,7 +46,9 @@ jQuery(document).ready(function($) {
                 day: ['day', 'days'],
                 week: ['week', 'weeks'],
                 month: ['month', 'months'],
-                year: ['year', 'years']
+                year: ['year', 'years'],
+                today: 'today',
+                yesterday: 'yesterday'
             },
             'sv': {
                 second: ['sekund', 'sekunder'],
@@ -47,7 +57,9 @@ jQuery(document).ready(function($) {
                 day: ['dag', 'dagar'],
                 week: ['vecka', 'veckor'],
                 month: ['månad', 'månader'],
-                year: ['år', 'år']
+                year: ['år', 'år'],
+                today: 'idag',
+                yesterday: 'igår'
             }
         };
         
@@ -70,7 +82,11 @@ jQuery(document).ready(function($) {
         }
         
         var days = Math.floor(diff / 86400);
-        if (days < 7) {
+        if (days === 0) {
+            return units[locale].today;
+        } else if (days === 1) {
+            return units[locale].yesterday;
+        } else if (days < 7) {
             return days + ' ' + (days === 1 ? units[locale].day[0] : units[locale].day[1]);
         }
         

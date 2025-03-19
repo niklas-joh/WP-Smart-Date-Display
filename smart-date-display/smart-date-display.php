@@ -12,9 +12,10 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-// Enable error logging for debugging
-ini_set('display_errors', 1);
-error_log('Smart Date Display plugin initialized');
+// Define plugin constants
+define('SMART_DATE_DISPLAY_PATH', plugin_dir_path(__FILE__));
+define('SMART_DATE_DISPLAY_URL', plugin_dir_url(__FILE__));
+define('SMART_DATE_DISPLAY_VERSION', '1.0.0');
 
 class Smart_Date_Display {
     
@@ -22,139 +23,81 @@ class Smart_Date_Display {
      * Constructor - register shortcode and enqueue necessary scripts
      */
     public function __construct() {
+        // Register shortcode
         add_shortcode('relative_date', array($this, 'relative_date_shortcode'));
+        
+        // Init hooks for block registration
         add_action('init', array($this, 'register_block'));
+        
+        // Frontend scripts
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        
+        // Admin scripts
+        add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
     }
 
-    /**
-     * Enqueue scripts for the frontend
-     */
-    public function enqueue_scripts() {
-        wp_enqueue_script(
-            'smart-date-script',
-            plugin_dir_url(__FILE__) . 'assets/js/smart-date.js',
-            array('jquery'),
-            '1.0',
-            true
-        );
-    }
+/**
+ * Enqueue block editor assets
+ */
+public function enqueue_block_editor_assets() {
+    // Block editor script
+    wp_enqueue_script(
+        'smart-date-block-editor',
+        SMART_DATE_DISPLAY_URL . 'assets/js/smart-date-admin.js',
+        array(
+            'wp-blocks',
+            'wp-element',
+            'wp-editor',
+            'wp-components',
+            'wp-i18n',
+            'wp-block-editor'
+        ),
+        SMART_DATE_DISPLAY_VERSION,
+        true
+    );
 
-    /**
-     * Enqueue scripts for the admin area
-     */
-    public function enqueue_admin_scripts($hook) {
-        if ('post.php' !== $hook && 'post-new.php' !== $hook) {
-            return;
-        }
-        
-        // Enqueue block editor script
-        wp_enqueue_script(
-            'smart-date-admin-script',
-            plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
-            array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor', 'wp-i18n'),
-            '1.0',
-            true
-        );
-        
-        // Enqueue custom editor styles
-        wp_enqueue_style(
-            'smart-date-editor-style',
-            plugin_dir_url(__FILE__) . 'assets/css/editor-style.css',
-            array(),
-            '1.0'
-        );
-        
-        // Register the block script for translations
-        if (function_exists('wp_set_script_translations')) {
-            wp_set_script_translations('smart-date-admin-script', 'smart-date-display');
-        }
-    }
+    // Block editor styles
+    wp_enqueue_style(
+        'smart-date-editor-style',
+        SMART_DATE_DISPLAY_URL . 'assets/css/editor-style.css',
+        array(),
+        SMART_DATE_DISPLAY_VERSION
+    );
 
-    /**
-     * Register the Gutenberg block
-     */
-    public function register_block() {
-        // Only register block if Gutenberg is available
-        if (function_exists('register_block_type')) {
-            register_block_type('smart-date-display/date-block', array(
-                'editor_script' => 'smart-date-admin-script',
-                'render_callback' => array($this, 'render_block'),
-                'attributes' => array(
-                    'date' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'displayType' => array(
-                        'type' => 'string',
-                        'default' => 'relative'
-                    ),
-                    'format' => array(
-                        'type' => 'string',
-                        'default' => 'Y-m-d H:i'
-                    ),
-                    'prefix' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'suffix' => array(
-                        'type' => 'string',
-                        'default' => 'ago'
-                    ),
-                    'locale' => array(
-                        'type' => 'string',
-                        'default' => 'en'
-                    ),
-                    // Style attributes
-                    'textColor' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'backgroundColor' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'fontSize' => array(
-                        'type' => 'number',
-                        'default' => 16
-                    ),
-                    'textAlign' => array(
-                        'type' => 'string',
-                        'default' => 'left'
-                    ),
-                    'padding' => array(
-                        'type' => 'number',
-                        'default' => 0
-                    ),
-                    'margin' => array(
-                        'type' => 'number',
-                        'default' => 0
-                    ),
-                    'borderWidth' => array(
-                        'type' => 'number',
-                        'default' => 0
-                    ),
-                    'borderRadius' => array(
-                        'type' => 'number',
-                        'default' => 0
-                    ),
-                    'borderColor' => array(
-                        'type' => 'string',
-                        'default' => ''
-                    ),
-                    'isBold' => array(
-                        'type' => 'boolean',
-                        'default' => false
-                    ),
-                    'isItalic' => array(
-                        'type' => 'boolean',
-                        'default' => false
-                    )
-                )
-            ));
-        }
+    // Register translations if available
+    if (function_exists('wp_set_script_translations')) {
+        wp_set_script_translations(
+            'smart-date-block-editor',
+            'smart-date-display'
+        );
     }
+}
+
+/**
+ * Register the Gutenberg block
+ */
+public function register_block() {
+    // Check if register_block_type_from_metadata is available (WP 5.5+)
+    if (function_exists('register_block_type_from_metadata')) {
+        // Register from block.json
+        register_block_type_from_metadata(
+            SMART_DATE_DISPLAY_PATH,
+            array(
+                'render_callback' => array($this, 'render_block')
+            )
+        );
+    } else {
+        // Fallback for older WordPress versions
+        register_block_type('smart-date-display/date-block', array(
+            'editor_script' => 'smart-date-block-editor',
+            'render_callback' => array($this, 'render_block'),
+            'attributes' => array(
+                // Your attributes array here
+                // (This can stay the same as your current attributes)
+            )
+        ));
+    }
+}
 
     /**
      * Render the Gutenberg block
@@ -162,12 +105,12 @@ class Smart_Date_Display {
     public function render_block($attributes) {
         // Convert block attributes to shortcode attributes
         $atts = array(
-            'date' => $attributes['date'] ?? '',
-            'display_type' => $attributes['displayType'] ?? 'relative',
-            'format' => $attributes['format'] ?? 'Y-m-d H:i',
-            'prefix' => $attributes['prefix'] ?? '',
-            'suffix' => $attributes['suffix'] ?? 'ago',
-            'locale' => $attributes['locale'] ?? 'en'
+            'date' => isset($attributes['date']) ? $attributes['date'] : '',
+            'display_type' => isset($attributes['displayType']) ? $attributes['displayType'] : 'relative',
+            'format' => isset($attributes['format']) ? $attributes['format'] : 'Y-m-d H:i',
+            'prefix' => isset($attributes['prefix']) ? $attributes['prefix'] : '',
+            'suffix' => isset($attributes['suffix']) ? $attributes['suffix'] : 'ago',
+            'locale' => isset($attributes['locale']) ? $attributes['locale'] : 'en'
         );
 
         // Get the formatted date content
@@ -183,7 +126,7 @@ class Smart_Date_Display {
         if (!empty($attributes['backgroundColor'])) {
             $style .= 'background-color:' . esc_attr($attributes['backgroundColor']) . ';';
         }
-        if (!empty($attributes['fontSize'])) {
+        if (isset($attributes['fontSize'])) {
             $style .= 'font-size:' . esc_attr($attributes['fontSize']) . 'px;';
         }
         if (!empty($attributes['textAlign'])) {
@@ -223,9 +166,9 @@ class Smart_Date_Display {
         
         // Output the styled date display
         if (!empty($style)) {
-            return '<span class="smart-date-display" style="' . $style . '">' . $date_content . '</span>';
+            return '<span class="smart-date-display" style="' . $style . '" data-timestamp="' . (strtotime($attributes['date']) ?: '') . '">' . $date_content . '</span>';
         } else {
-            return '<span class="smart-date-display">' . $date_content . '</span>';
+            return '<span class="smart-date-display" data-timestamp="' . (strtotime($attributes['date']) ?: '') . '">' . $date_content . '</span>';
         }
     }
 
