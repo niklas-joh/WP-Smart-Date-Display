@@ -1,15 +1,17 @@
-.relative-date-block {
-    padding: 15px;
-    background: #f8f9fa;
-    border: 1px solid #e2e4e7;
-}
-
-.relative-date-block .preview {
-    margin-bottom: 10px;
+.smart-date-display {
+    padding: 10px;
+    border: 1px dashed #ddd;
+    border-radius: 4px;
     font-size: 16px;
+    line-height: 1.4;
+    text-align: left;
+    color: #333;
+    background: #fcfcfc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
-.relative-date-block .settings-summary {
-    font-size: 13px;
-    color: #555;
+/* Add a subtle highlight when the block is selected */
+.is-selected .smart-date-display {
+    border-color: #007cba;
+    box-shadow: 0 0 0 1px #007cba;
 }
