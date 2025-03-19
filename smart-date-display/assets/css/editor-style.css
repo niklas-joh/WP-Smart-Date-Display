@@ -1,0 +1,15 @@
+.relative-date-block {
+    padding: 15px;
+    background: #f8f9fa;
+    border: 1px solid #e2e4e7;
+}
+
+.relative-date-block .preview {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.relative-date-block .settings-summary {
+    font-size: 13px;
+    color: #555;
+}
