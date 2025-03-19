@@ -126,16 +126,9 @@ registerBlockType('smart-date-display/date-block', {
             )
         );
         
-        // Create the preview display
-        const preview = el('div', { className: 'relative-date-block' },
-            el('div', { className: 'preview' },
-                el('strong', {}, 'Preview: '),
-                previewDate()
-            ),
-            el('div', { className: 'settings-summary' },
-                el('p', {}, 'Display: ' + (displayType === 'relative' ? 'Relative' : 'Absolute')),
-                el('p', {}, 'Language: ' + (locale === 'en' ? 'English' : 'Swedish'))
-            )
+        // Create the clean preview display - just showing the date itself
+        const preview = el('div', { className: 'smart-date-display' },
+            previewDate()
         );
         
         // Return both the inspector controls and preview
