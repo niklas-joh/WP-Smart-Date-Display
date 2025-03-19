@@ -49,8 +49,6 @@ public function enqueue_admin_scripts($hook) {
         return;
     }
     
-    $asset_file = include(plugin_dir_path(__FILE__) . 'assets/js/block.asset.php');
-    
     wp_enqueue_script(
         'smart-date-admin-script',
         plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
@@ -63,7 +61,6 @@ public function enqueue_admin_scripts($hook) {
     if (function_exists('wp_set_script_translations')) {
         wp_set_script_translations('smart-date-admin-script', 'smart-date-display');
     }
-}
 
     /**
  * Register the Gutenberg block
