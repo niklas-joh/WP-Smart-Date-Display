@@ -41,26 +41,36 @@ class Smart_Date_Display {
         );
     }
 
-    /**
-     * Enqueue scripts for the admin area
-     */
+/**
+ * Enqueue scripts for the admin area
+ */
 public function enqueue_admin_scripts($hook) {
     if ('post.php' !== $hook && 'post-new.php' !== $hook) {
         return;
     }
     
+    // Enqueue block editor script
     wp_enqueue_script(
         'smart-date-admin-script',
         plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
-        $asset_file['dependencies'],
-        $asset_file['version'],
+        array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor', 'wp-i18n'),
+        '1.0',
         true
     );
     
-    // Register the block script
+    // Enqueue custom editor styles
+    wp_enqueue_style(
+        'smart-date-editor-style',
+        plugin_dir_url(__FILE__) . 'assets/css/editor-style.css',
+        array(),
+        '1.0'
+    );
+    
+    // Register the block script for translations
     if (function_exists('wp_set_script_translations')) {
         wp_set_script_translations('smart-date-admin-script', 'smart-date-display');
     }
+}
 
     /**
  * Register the Gutenberg block

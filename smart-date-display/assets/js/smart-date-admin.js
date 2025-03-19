@@ -173,13 +173,27 @@ registerBlockType('smart-date-display/date-block', {
             }, (tab) => {
                 if (tab.name === 'content') {
                     return el(Fragment, {},
-                        el(PanelBody, { title: "Date Settings", initialOpen: true },
-                            el(DateTimePicker, {
-                                currentDate: date,
-                                onChange: (newDate) => setAttributes({ date: newDate }),
-                                is12Hour: true
-                            }),
-                            
+                        // Date Picker Panel
+                        el(PanelBody, { 
+                            title: "Date Selection", 
+                            initialOpen: true 
+                        },
+                            el('div', { className: 'smart-date-picker-wrapper' },
+                                el(DateTimePicker, {
+                                    currentDate: date,
+                                    onChange: (newDate) => setAttributes({ date: newDate }),
+                                    is12Hour: false, // Use 24-hour format
+                                    isInvalidDate: () => false, // Allow all dates
+                                    firstDayOfWeek: 1 // Start week on Monday (0 = Sunday, 1 = Monday)
+                                })
+                            )
+                        ),
+                        
+                        // Display Settings Panel
+                        el(PanelBody, { 
+                            title: "Display Settings", 
+                            initialOpen: false 
+                        },
                             el(SelectControl, {
                                 label: "Display Type",
                                 value: displayType,
@@ -195,8 +209,14 @@ registerBlockType('smart-date-display/date-block', {
                                 value: format,
                                 help: "PHP date format (e.g., Y-m-d H:i)",
                                 onChange: (value) => setAttributes({ format: value })
-                            }) : null,
-                            
+                            }) : null
+                        ),
+                        
+                        // Text Options Panel
+                        el(PanelBody, { 
+                            title: "Text Options", 
+                            initialOpen: false 
+                        },
                             el(TextControl, {
                                 label: "Prefix",
                                 value: prefix,
@@ -207,10 +227,16 @@ registerBlockType('smart-date-display/date-block', {
                                 label: "Suffix",
                                 value: suffix,
                                 onChange: (value) => setAttributes({ suffix: value })
-                            }),
-                            
+                            })
+                        ),
+                        
+                        // Language Panel
+                        el(PanelBody, { 
+                            title: "Language", 
+                            initialOpen: false 
+                        },
                             el(SelectControl, {
-                                label: "Language",
+                                label: "Locale",
                                 value: locale,
                                 options: [
                                     { label: 'English', value: 'en' },
@@ -223,7 +249,10 @@ registerBlockType('smart-date-display/date-block', {
                 } else if (tab.name === 'style') {
                     return el(Fragment, {},
                         // Text options
-                        el(PanelBody, { title: "Text", initialOpen: true },
+                        el(PanelBody, { 
+                            title: "Text", 
+                            initialOpen: true 
+                        },
                             el(SelectControl, {
                                 label: "Text Alignment",
                                 value: textAlign,
@@ -257,25 +286,33 @@ registerBlockType('smart-date-display/date-block', {
                         ),
                         
                         // Color options
-                        el(PanelColorSettings, {
-                            title: "Colors",
-                            initialOpen: false,
-                            colorSettings: [
-                                {
-                                    value: textColor,
-                                    onChange: (value) => setAttributes({ textColor: value }),
-                                    label: "Text Color"
-                                },
-                                {
-                                    value: backgroundColor,
-                                    onChange: (value) => setAttributes({ backgroundColor: value }),
-                                    label: "Background Color"
-                                }
-                            ]
-                        }),
+                        el(PanelBody, { 
+                            title: "Colors", 
+                            initialOpen: false 
+                        },
+                            el(PanelColorSettings, {
+                                title: "",
+                                initialOpen: true,
+                                colorSettings: [
+                                    {
+                                        value: textColor,
+                                        onChange: (value) => setAttributes({ textColor: value }),
+                                        label: "Text Color"
+                                    },
+                                    {
+                                        value: backgroundColor,
+                                        onChange: (value) => setAttributes({ backgroundColor: value }),
+                                        label: "Background Color"
+                                    }
+                                ]
+                            })
+                        ),
                         
                         // Spacing options
-                        el(PanelBody, { title: "Spacing", initialOpen: false },
+                        el(PanelBody, { 
+                            title: "Spacing", 
+                            initialOpen: false 
+                        },
                             el(RangeControl, {
                                 label: "Padding",
                                 value: padding,
@@ -294,7 +331,10 @@ registerBlockType('smart-date-display/date-block', {
                         ),
                         
                         // Border options
-                        el(PanelBody, { title: "Border", initialOpen: false },
+                        el(PanelBody, { 
+                            title: "Border", 
+                            initialOpen: false 
+                        },
                             el(RangeControl, {
                                 label: "Border Width",
                                 value: borderWidth,
