@@ -12,6 +12,10 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+// Enable error logging for debugging
+ini_set('display_errors', 1);
+error_log('Smart Date Display plugin initialized');
+
 class Smart_Date_Display {
     
     /**
@@ -44,6 +48,10 @@ class Smart_Date_Display {
  	   if ('post.php' !== $hook && 'post-new.php' !== $hook) {
            return;
 	}
+	
+	// Debug the script path
+    	error_log('Script path: ' . plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js');
+
 
     	wp_enqueue_script(
         	'smart-date-admin-script',
