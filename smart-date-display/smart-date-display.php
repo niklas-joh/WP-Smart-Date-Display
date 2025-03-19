@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Smart Date Display
  * Description: A flexible WordPress plugin that displays dates in relative or absolute format with customizable prefixes, suffixes, and multilingual support
- * Version: 1.0
+ * Version: 0.0.02
  * Author: Niklas Johansson
  * Author URI: https://github.com/niklas-joh
  * Plugin URI: https://github.com/niklas-joh/WP-Smart-Date-Display
@@ -66,8 +66,8 @@ public function enqueue_admin_scripts($hook) {
 }
 
     /**
-     * Register the Gutenberg block
-     */
+ * Register the Gutenberg block
+ */
 public function register_block() {
     // Only register block if Gutenberg is available
     if (function_exists('register_block_type')) {
@@ -98,29 +98,129 @@ public function register_block() {
                 'locale' => array(
                     'type' => 'string',
                     'default' => 'en'
+                ),
+                // Style attributes
+                'textColor' => array(
+                    'type' => 'string',
+                    'default' => ''
+                ),
+                'backgroundColor' => array(
+                    'type' => 'string',
+                    'default' => ''
+                ),
+                'fontSize' => array(
+                    'type' => 'number',
+                    'default' => 16
+                ),
+                'textAlign' => array(
+                    'type' => 'string',
+                    'default' => 'left'
+                ),
+                'padding' => array(
+                    'type' => 'number',
+                    'default' => 0
+                ),
+                'margin' => array(
+                    'type' => 'number',
+                    'default' => 0
+                ),
+                'borderWidth' => array(
+                    'type' => 'number',
+                    'default' => 0
+                ),
+                'borderRadius' => array(
+                    'type' => 'number',
+                    'default' => 0
+                ),
+                'borderColor' => array(
+                    'type' => 'string',
+                    'default' => ''
+                ),
+                'isBold' => array(
+                    'type' => 'boolean',
+                    'default' => false
+                ),
+                'isItalic' => array(
+                    'type' => 'boolean',
+                    'default' => false
                 )
             )
         ));
     }
 }
 
-    /**
-     * Render the Gutenberg block
-     */
-    public function render_block($attributes) {
-        // Convert block attributes to shortcode attributes
-        $atts = array(
-            'date' => $attributes['date'] ?? '',
-            'display_type' => $attributes['displayType'] ?? 'relative',
-            'format' => $attributes['format'] ?? 'Y-m-d H:i',
-            'prefix' => $attributes['prefix'] ?? '',
-            'suffix' => $attributes['suffix'] ?? 'ago',
-            'locale' => $attributes['locale'] ?? 'en'
-        );
+/**
+ * Render the Gutenberg block
+ */
+public function render_block($attributes) {
+    // Convert block attributes to shortcode attributes
+    $atts = array(
+        'date' => $attributes['date'] ?? '',
+        'display_type' => $attributes['displayType'] ?? 'relative',
+        'format' => $attributes['format'] ?? 'Y-m-d H:i',
+        'prefix' => $attributes['prefix'] ?? '',
+        'suffix' => $attributes['suffix'] ?? 'ago',
+        'locale' => $attributes['locale'] ?? 'en'
+    );
 
-        // Return the shortcode output
-        return $this->relative_date_shortcode($atts);
+    // Get the formatted date content
+    $date_content = $this->relative_date_shortcode($atts);
+    
+    // Build inline styles from attributes
+    $style = '';
+    
+    // Text formatting
+    if (!empty($attributes['textColor'])) {
+        $style .= 'color:' . esc_attr($attributes['textColor']) . ';';
     }
+    if (!empty($attributes['backgroundColor'])) {
+        $style .= 'background-color:' . esc_attr($attributes['backgroundColor']) . ';';
+    }
+    if (!empty($attributes['fontSize'])) {
+        $style .= 'font-size:' . esc_attr($attributes['fontSize']) . 'px;';
+    }
+    if (!empty($attributes['textAlign'])) {
+        $style .= 'text-align:' . esc_attr($attributes['textAlign']) . ';';
+    }
+    
+    // Font weight and style
+    if (isset($attributes['isBold']) && $attributes['isBold']) {
+        $style .= 'font-weight:bold;';
+    }
+    if (isset($attributes['isItalic']) && $attributes['isItalic']) {
+        $style .= 'font-style:italic;';
+    }
+    
+    // Spacing
+    if (isset($attributes['padding']) && is_numeric($attributes['padding'])) {
+        $style .= 'padding:' . esc_attr($attributes['padding']) . 'px;';
+    }
+    if (isset($attributes['margin']) && is_numeric($attributes['margin'])) {
+        $style .= 'margin:' . esc_attr($attributes['margin']) . 'px;';
+    }
+    
+    // Border
+    if (isset($attributes['borderWidth']) && $attributes['borderWidth'] > 0) {
+        $style .= 'border-width:' . esc_attr($attributes['borderWidth']) . 'px;';
+        $style .= 'border-style:solid;';
+        
+        if (!empty($attributes['borderColor'])) {
+            $style .= 'border-color:' . esc_attr($attributes['borderColor']) . ';';
+        } else {
+            $style .= 'border-color:#ddd;';
+        }
+    }
+    if (isset($attributes['borderRadius']) && is_numeric($attributes['borderRadius'])) {
+        $style .= 'border-radius:' . esc_attr($attributes['borderRadius']) . 'px;';
+    }
+    
+    // Output the styled date display
+    if (!empty($style)) {
+        return '<span class="smart-date-display" style="' . $style . '">' . $date_content . '</span>';
+    } else {
+        return '<span class="smart-date-display">' . $date_content . '</span>';
+    }
+}
 
     /**
      * Converts a timestamp into a human-readable relative date string based on locale

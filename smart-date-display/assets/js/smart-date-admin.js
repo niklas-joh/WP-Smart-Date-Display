@@ -1,6 +1,15 @@
 const { registerBlockType } = wp.blocks;
-const { InspectorControls } = wp.blockEditor;
-const { PanelBody, SelectControl, TextControl, DateTimePicker } = wp.components;
+const { InspectorControls, PanelColorSettings } = wp.blockEditor;
+const { 
+    PanelBody, 
+    SelectControl, 
+    TextControl, 
+    DateTimePicker,
+    RangeControl,
+    ToggleControl,
+    TabPanel,
+    FontSizePicker
+} = wp.components;
 const { Fragment } = wp.element;
 const { createElement: el } = wp.element;
 const { __ } = wp.i18n;
@@ -35,12 +44,61 @@ registerBlockType('smart-date-display/date-block', {
         locale: {
             type: 'string',
             default: 'en'
+        },
+        // Style attributes
+        textColor: {
+            type: 'string',
+            default: ''
+        },
+        backgroundColor: {
+            type: 'string',
+            default: ''
+        },
+        fontSize: {
+            type: 'number',
+            default: 16
+        },
+        textAlign: {
+            type: 'string',
+            default: 'left'
+        },
+        padding: {
+            type: 'number',
+            default: 0
+        },
+        margin: {
+            type: 'number',
+            default: 0
+        },
+        borderWidth: {
+            type: 'number',
+            default: 0
+        },
+        borderRadius: {
+            type: 'number',
+            default: 0
+        },
+        borderColor: {
+            type: 'string',
+            default: ''
+        },
+        isBold: {
+            type: 'boolean',
+            default: false
+        },
+        isItalic: {
+            type: 'boolean',
+            default: false
         }
     },
     
     edit: function(props) {
         const { attributes, setAttributes } = props;
-        const { date, displayType, format, prefix, suffix, locale } = attributes;
+        const { 
+            date, displayType, format, prefix, suffix, locale,
+            textColor, backgroundColor, fontSize, textAlign, padding, margin,
+            borderWidth, borderRadius, borderColor, isBold, isItalic
+        } = attributes;
         
         // Function to preview the date format based on current settings
         const previewDate = () => {
@@ -76,60 +134,205 @@ registerBlockType('smart-date-display/date-block', {
             }
         };
         
-        // Create inspector controls (sidebar)
+        // Apply styles to the preview element
+        const getStyles = () => {
+            return {
+                color: textColor || undefined,
+                backgroundColor: backgroundColor || undefined,
+                fontSize: fontSize + 'px',
+                textAlign: textAlign,
+                padding: padding + 'px',
+                margin: margin + 'px',
+                borderWidth: borderWidth + 'px',
+                borderStyle: borderWidth > 0 ? 'solid' : 'none',
+                borderColor: borderColor || '#ddd',
+                borderRadius: borderRadius + 'px',
+                fontWeight: isBold ? 'bold' : 'normal',
+                fontStyle: isItalic ? 'italic' : 'normal',
+                display: 'block'
+            };
+        };
+        
+        // Create inspector controls with tabs
         const inspectorControls = el(InspectorControls, {},
-            el(PanelBody, { title: "Date Settings", initialOpen: true },
-                el(DateTimePicker, {
-                    currentDate: date,
-                    onChange: (newDate) => setAttributes({ date: newDate }),
-                    is12Hour: true
-                }),
-                
-                el(SelectControl, {
-                    label: "Display Type",
-                    value: displayType,
-                    options: [
-                        { label: 'Relative', value: 'relative' },
-                        { label: 'Absolute', value: 'absolute' }
-                    ],
-                    onChange: (value) => setAttributes({ displayType: value })
-                }),
-                
-                displayType === 'absolute' ? el(TextControl, {
-                    label: "Date Format",
-                    value: format,
-                    help: "PHP date format (e.g., Y-m-d H:i)",
-                    onChange: (value) => setAttributes({ format: value })
-                }) : null,
-                
-                el(TextControl, {
-                    label: "Prefix",
-                    value: prefix,
-                    onChange: (value) => setAttributes({ prefix: value })
-                }),
-                
-                el(TextControl, {
-                    label: "Suffix",
-                    value: suffix,
-                    onChange: (value) => setAttributes({ suffix: value })
-                }),
-                
-                el(SelectControl, {
-                    label: "Language",
-                    value: locale,
-                    options: [
-                        { label: 'English', value: 'en' },
-                        { label: 'Swedish', value: 'sv' }
-                    ],
-                    onChange: (value) => setAttributes({ locale: value })
-                })
-            )
+            el(TabPanel, {
+                className: 'smart-date-tabs',
+                activeClass: 'is-active',
+                tabs: [
+                    {
+                        name: 'content',
+                        title: 'Content',
+                        className: 'tab-content',
+                    },
+                    {
+                        name: 'style',
+                        title: 'Style',
+                        className: 'tab-style',
+                    }
+                ]
+            }, (tab) => {
+                if (tab.name === 'content') {
+                    return el(Fragment, {},
+                        el(PanelBody, { title: "Date Settings", initialOpen: true },
+                            el(DateTimePicker, {
+                                currentDate: date,
+                                onChange: (newDate) => setAttributes({ date: newDate }),
+                                is12Hour: true
+                            }),
+                            
+                            el(SelectControl, {
+                                label: "Display Type",
+                                value: displayType,
+                                options: [
+                                    { label: 'Relative', value: 'relative' },
+                                    { label: 'Absolute', value: 'absolute' }
+                                ],
+                                onChange: (value) => setAttributes({ displayType: value })
+                            }),
+                            
+                            displayType === 'absolute' ? el(TextControl, {
+                                label: "Date Format",
+                                value: format,
+                                help: "PHP date format (e.g., Y-m-d H:i)",
+                                onChange: (value) => setAttributes({ format: value })
+                            }) : null,
+                            
+                            el(TextControl, {
+                                label: "Prefix",
+                                value: prefix,
+                                onChange: (value) => setAttributes({ prefix: value })
+                            }),
+                            
+                            el(TextControl, {
+                                label: "Suffix",
+                                value: suffix,
+                                onChange: (value) => setAttributes({ suffix: value })
+                            }),
+                            
+                            el(SelectControl, {
+                                label: "Language",
+                                value: locale,
+                                options: [
+                                    { label: 'English', value: 'en' },
+                                    { label: 'Swedish', value: 'sv' }
+                                ],
+                                onChange: (value) => setAttributes({ locale: value })
+                            })
+                        )
+                    );
+                } else if (tab.name === 'style') {
+                    return el(Fragment, {},
+                        // Text options
+                        el(PanelBody, { title: "Text", initialOpen: true },
+                            el(SelectControl, {
+                                label: "Text Alignment",
+                                value: textAlign,
+                                options: [
+                                    { label: 'Left', value: 'left' },
+                                    { label: 'Center', value: 'center' },
+                                    { label: 'Right', value: 'right' }
+                                ],
+                                onChange: (value) => setAttributes({ textAlign: value })
+                            }),
+                            
+                            el(RangeControl, {
+                                label: "Font Size",
+                                value: fontSize,
+                                min: 10,
+                                max: 36,
+                                onChange: (value) => setAttributes({ fontSize: value })
+                            }),
+                            
+                            el(ToggleControl, {
+                                label: "Bold",
+                                checked: isBold,
+                                onChange: (value) => setAttributes({ isBold: value })
+                            }),
+                            
+                            el(ToggleControl, {
+                                label: "Italic",
+                                checked: isItalic,
+                                onChange: (value) => setAttributes({ isItalic: value })
+                            })
+                        ),
+                        
+                        // Color options
+                        el(PanelColorSettings, {
+                            title: "Colors",
+                            initialOpen: false,
+                            colorSettings: [
+                                {
+                                    value: textColor,
+                                    onChange: (value) => setAttributes({ textColor: value }),
+                                    label: "Text Color"
+                                },
+                                {
+                                    value: backgroundColor,
+                                    onChange: (value) => setAttributes({ backgroundColor: value }),
+                                    label: "Background Color"
+                                }
+                            ]
+                        }),
+                        
+                        // Spacing options
+                        el(PanelBody, { title: "Spacing", initialOpen: false },
+                            el(RangeControl, {
+                                label: "Padding",
+                                value: padding,
+                                min: 0,
+                                max: 50,
+                                onChange: (value) => setAttributes({ padding: value })
+                            }),
+                            
+                            el(RangeControl, {
+                                label: "Margin",
+                                value: margin,
+                                min: 0,
+                                max: 50,
+                                onChange: (value) => setAttributes({ margin: value })
+                            })
+                        ),
+                        
+                        // Border options
+                        el(PanelBody, { title: "Border", initialOpen: false },
+                            el(RangeControl, {
+                                label: "Border Width",
+                                value: borderWidth,
+                                min: 0,
+                                max: 10,
+                                onChange: (value) => setAttributes({ borderWidth: value })
+                            }),
+                            
+                            el(RangeControl, {
+                                label: "Border Radius",
+                                value: borderRadius,
+                                min: 0,
+                                max: 50,
+                                onChange: (value) => setAttributes({ borderRadius: value })
+                            }),
+                            
+                            borderWidth > 0 ? el(PanelColorSettings, {
+                                title: "",
+                                initialOpen: true,
+                                colorSettings: [
+                                    {
+                                        value: borderColor,
+                                        onChange: (value) => setAttributes({ borderColor: value }),
+                                        label: "Border Color"
+                                    }
+                                ]
+                            }) : null
+                        )
+                    );
+                }
+            })
         );
         
-        // Create the clean preview display - just showing the date itself
-        const preview = el('div', { className: 'smart-date-display' },
-            previewDate()
-        );
+        // Create the clean preview display with applied styles
+        const preview = el('div', { 
+            className: 'smart-date-display',
+            style: getStyles()
+        }, previewDate());
         
         // Return both the inspector controls and preview
         return el(Fragment, {}, [inspectorControls, preview]);
