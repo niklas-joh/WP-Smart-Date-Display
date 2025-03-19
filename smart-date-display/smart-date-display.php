@@ -44,31 +44,26 @@ class Smart_Date_Display {
     /**
      * Enqueue scripts for the admin area
      */
-	public function enqueue_admin_scripts($hook) {
- 	   if ('post.php' !== $hook && 'post-new.php' !== $hook) {
-           return;
-	}
-	
-	// Debug the script path
-    	error_log('Script path: ' . plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js');
-
-
-    	wp_enqueue_script(
-        	'smart-date-admin-script',
-	        plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
-        	array('wp-blocks', 'wp-element', 'wp-components', 'wp-editor', 'wp-i18n', 'wp-block-editor'),
-        	'1.0',
-        	true
-	    );
-
-	    // Register the editor style if needed
-    	wp_enqueue_style(
-        	'smart-date-editor-style',
-	        plugin_dir_url(__FILE__) . 'assets/css/editor-style.css',
-        	array(),
-        	'1.0'
-	    );
-	}
+public function enqueue_admin_scripts($hook) {
+    if ('post.php' !== $hook && 'post-new.php' !== $hook) {
+        return;
+    }
+    
+    $asset_file = include(plugin_dir_path(__FILE__) . 'assets/js/block.asset.php');
+    
+    wp_enqueue_script(
+        'smart-date-admin-script',
+        plugin_dir_url(__FILE__) . 'assets/js/smart-date-admin.js',
+        $asset_file['dependencies'],
+        $asset_file['version'],
+        true
+    );
+    
+    // Register the block script
+    if (function_exists('wp_set_script_translations')) {
+        wp_set_script_translations('smart-date-admin-script', 'smart-date-display');
+    }
+}
 
     /**
      * Register the Gutenberg block
