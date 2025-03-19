@@ -6,11 +6,16 @@
   "category": "widgets",
   "icon": "calendar-alt",
   "description": "Display dates in relative or absolute formats with customization options",
-  "keywords": ["date", "relative", "time"],
+  "keywords": ["date", "relative", "time", "format"],
   "version": "1.0.0",
   "textdomain": "smart-date-display",
   "editorScript": "file:./assets/js/smart-date-admin.js",
   "editorStyle": "file:./assets/css/editor-style.css",
+  "script": "file:./assets/js/smart-date.js",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
   "attributes": {
     "date": {
       "type": "string",
@@ -22,7 +27,7 @@
     },
     "format": {
       "type": "string",
-      "default": "Y-m-d H:i"
+      "default": "F j, Y"
     },
     "prefix": {
       "type": "string",
@@ -35,50 +40,14 @@
     "locale": {
       "type": "string",
       "default": "en"
-    },
-    "textColor": {
-      "type": "string",
-      "default": ""
-    },
-    "backgroundColor": {
-      "type": "string",
-      "default": ""
-    },
-    "fontSize": {
-      "type": "number",
-      "default": 16
-    },
-    "textAlign": {
-      "type": "string",
-      "default": "left"
-    },
-    "padding": {
-      "type": "number",
-      "default": 0
-    },
-    "margin": {
-      "type": "number",
-      "default": 0
-    },
-    "borderWidth": {
-      "type": "number",
-      "default": 0
-    },
-    "borderRadius": {
-      "type": "number",
-      "default": 0
-    },
-    "borderColor": {
-      "type": "string",
-      "default": ""
-    },
-    "isBold": {
-      "type": "boolean",
-      "default": false
-    },
-    "isItalic": {
-      "type": "boolean",
-      "default": false
+    }
+  },
+  "example": {
+    "attributes": {
+      "date": "2023-01-01 12:00:00",
+      "displayType": "relative",
+      "prefix": "Posted",
+      "suffix": "ago"
     }
   }
 }

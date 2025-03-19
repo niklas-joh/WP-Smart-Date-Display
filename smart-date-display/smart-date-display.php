@@ -1,347 +1,397 @@
 <?php
 /**
  * Plugin Name: Smart Date Display
- * Description: A flexible WordPress plugin that displays dates in relative or absolute format with customizable prefixes, suffixes, and multilingual support
- * Version: 1.0
+ * Description: A flexible WordPress plugin that displays dates in relative or absolute format
+ * Version: 1.0.0
  * Author: Niklas Johansson
  * Author URI: https://github.com/niklas-joh
- * Plugin URI: https://github.com/niklas-joh/WP-Smart-Date-Display
+ * Text Domain: smart-date-display
+ * Domain Path: /languages
+ * License: GPL-2.0+
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  */
 
+// Exit if accessed directly
 if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
+    exit;
 }
 
-// Define plugin constants
-define('SMART_DATE_DISPLAY_PATH', plugin_dir_path(__FILE__));
-define('SMART_DATE_DISPLAY_URL', plugin_dir_url(__FILE__));
-define('SMART_DATE_DISPLAY_VERSION', '1.0.0');
-
+/**
+ * Main plugin class
+ */
 class Smart_Date_Display {
-    
+
     /**
-     * Constructor - register shortcode and enqueue necessary scripts
+     * Plugin instance
+     *
+     * @var Smart_Date_Display
      */
-    public function __construct() {
+    private static $instance = null;
+
+    /**
+     * Get plugin instance
+     *
+     * @return Smart_Date_Display
+     */
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Constructor
+     */
+    private function __construct() {
+        // Define constants
+        $this->define_constants();
+
+        // Initialize hooks
+        $this->init_hooks();
+
+        // Load textdomain
+        add_action('plugins_loaded', array($this, 'load_textdomain'));
+    }
+
+    /**
+     * Define plugin constants
+     */
+    private function define_constants() {
+        define('SMART_DATE_DISPLAY_VERSION', '1.0.0');
+        define('SMART_DATE_DISPLAY_PATH', plugin_dir_path(__FILE__));
+        define('SMART_DATE_DISPLAY_URL', plugin_dir_url(__FILE__));
+        define('SMART_DATE_DISPLAY_FILE', __FILE__);
+    }
+
+    /**
+     * Initialize hooks
+     */
+    private function init_hooks() {
         // Register shortcode
         add_shortcode('relative_date', array($this, 'relative_date_shortcode'));
-        
-        // Init hooks for block registration
+
+        // Register block
         add_action('init', array($this, 'register_block'));
-        
-        // Frontend scripts
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        
-        // Admin scripts
-        add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
+
+        // Register frontend script
+        add_action('wp_enqueue_scripts', array($this, 'register_frontend_script'));
     }
-
-/**
- * Enqueue block editor assets
- */
-public function enqueue_block_editor_assets() {
-    // Block editor script
-    wp_enqueue_script(
-        'smart-date-block-editor',
-        SMART_DATE_DISPLAY_URL . 'assets/js/smart-date-admin.js',
-        array(
-            'wp-blocks',
-            'wp-element',
-            'wp-editor',
-            'wp-components',
-            'wp-i18n',
-            'wp-block-editor'
-        ),
-        SMART_DATE_DISPLAY_VERSION,
-        true
-    );
-
-    // Block editor styles
-    wp_enqueue_style(
-        'smart-date-editor-style',
-        SMART_DATE_DISPLAY_URL . 'assets/css/editor-style.css',
-        array(),
-        SMART_DATE_DISPLAY_VERSION
-    );
-
-    // Register translations if available
-    if (function_exists('wp_set_script_translations')) {
-        wp_set_script_translations(
-            'smart-date-block-editor',
-            'smart-date-display'
-        );
-    }
-}
-
-/**
- * Register the Gutenberg block
- */
-public function register_block() {
-    // Check if register_block_type_from_metadata is available (WP 5.5+)
-    if (function_exists('register_block_type_from_metadata')) {
-        // Register from block.json
-        register_block_type_from_metadata(
-            SMART_DATE_DISPLAY_PATH,
-            array(
-                'render_callback' => array($this, 'render_block')
-            )
-        );
-    } else {
-        // Fallback for older WordPress versions
-        register_block_type('smart-date-display/date-block', array(
-            'editor_script' => 'smart-date-block-editor',
-            'render_callback' => array($this, 'render_block'),
-            'attributes' => array(
-                // Your attributes array here
-                // (This can stay the same as your current attributes)
-            )
-        ));
-    }
-}
 
     /**
-     * Render the Gutenberg block
+     * Load plugin textdomain
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain(
+            'smart-date-display',
+            false,
+            dirname(plugin_basename(__FILE__)) . '/languages'
+        );
+    }
+
+    /**
+     * Register frontend script
+     */
+    public function register_frontend_script() {
+        wp_register_script(
+            'smart-date-frontend',
+            SMART_DATE_DISPLAY_URL . 'assets/js/smart-date.js',
+            array('jquery'),
+            SMART_DATE_DISPLAY_VERSION,
+            true
+        );
+    }
+
+    /**
+     * Register block
+     */
+    public function register_block() {
+        // Register block script
+        wp_register_script(
+            'smart-date-block-editor',
+            SMART_DATE_DISPLAY_URL . 'assets/js/smart-date-admin.js',
+            array(
+                'wp-blocks',
+                'wp-element',
+                'wp-i18n',
+                'wp-block-editor',
+                'wp-components'
+            ),
+            SMART_DATE_DISPLAY_VERSION,
+            true
+        );
+        
+        // Register block style
+        wp_register_style(
+            'smart-date-editor-style',
+            SMART_DATE_DISPLAY_URL . 'assets/css/editor-style.css',
+            array(),
+            SMART_DATE_DISPLAY_VERSION
+        );
+
+        // Set translation for block script
+        if (function_exists('wp_set_script_translations')) {
+            wp_set_script_translations(
+                'smart-date-block-editor',
+                'smart-date-display',
+                SMART_DATE_DISPLAY_PATH . '/languages'
+            );
+        }
+
+        // Register block type
+        if (function_exists('register_block_type_from_metadata')) {
+            // WP 5.5+ method
+            register_block_type_from_metadata(
+                SMART_DATE_DISPLAY_PATH,
+                array(
+                    'render_callback' => array($this, 'render_block')
+                )
+            );
+        } else {
+            // Fallback for older WP versions
+            register_block_type('smart-date-display/date-block', array(
+                'editor_script' => 'smart-date-block-editor',
+                'editor_style' => 'smart-date-editor-style',
+                'render_callback' => array($this, 'render_block'),
+                'attributes' => array(
+                    'date' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'displayType' => array(
+                        'type' => 'string',
+                        'default' => 'relative'
+                    ),
+                    'format' => array(
+                        'type' => 'string',
+                        'default' => 'F j, Y'
+                    ),
+                    'prefix' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    ),
+                    'suffix' => array(
+                        'type' => 'string',
+                        'default' => 'ago'
+                    ),
+                    'locale' => array(
+                        'type' => 'string',
+                        'default' => 'en'
+                    ),
+                    'className' => array(
+                        'type' => 'string',
+                        'default' => ''
+                    )
+                )
+            ));
+        }
+    }
+
+    /**
+     * Render block
+     *
+     * @param array $attributes Block attributes
+     * @return string Rendered block
      */
     public function render_block($attributes) {
-        // Convert block attributes to shortcode attributes
-        $atts = array(
-            'date' => isset($attributes['date']) ? $attributes['date'] : '',
-            'display_type' => isset($attributes['displayType']) ? $attributes['displayType'] : 'relative',
-            'format' => isset($attributes['format']) ? $attributes['format'] : 'Y-m-d H:i',
-            'prefix' => isset($attributes['prefix']) ? $attributes['prefix'] : '',
-            'suffix' => isset($attributes['suffix']) ? $attributes['suffix'] : 'ago',
-            'locale' => isset($attributes['locale']) ? $attributes['locale'] : 'en'
+        // Enqueue frontend script
+        wp_enqueue_script('smart-date-frontend');
+        
+        // Set default values
+        $date = isset($attributes['date']) ? $attributes['date'] : current_time('mysql');
+        $display_type = isset($attributes['displayType']) ? $attributes['displayType'] : 'relative';
+        $format = isset($attributes['format']) ? $attributes['format'] : 'F j, Y';
+        $prefix = isset($attributes['prefix']) ? $attributes['prefix'] : '';
+        $suffix = isset($attributes['suffix']) ? $attributes['suffix'] : 'ago';
+        $locale = isset($attributes['locale']) ? $attributes['locale'] : 'en';
+        $class_name = isset($attributes['className']) ? $attributes['className'] : '';
+        
+        // Convert the date to a timestamp
+        $timestamp = strtotime($date);
+        
+        // Form the shortcode attributes
+        $shortcode_atts = array(
+            'timestamp' => $timestamp,
+            'display_type' => $display_type,
+            'format' => $format,
+            'prefix' => $prefix,
+            'suffix' => $suffix,
+            'locale' => $locale
         );
-
-        // Get the formatted date content
-        $date_content = $this->relative_date_shortcode($atts);
         
-        // Build inline styles from attributes
-        $style = '';
+        // Get formatted date from shortcode
+        $date_content = $this->relative_date_shortcode($shortcode_atts);
         
-        // Text formatting
-        if (!empty($attributes['textColor'])) {
-            $style .= 'color:' . esc_attr($attributes['textColor']) . ';';
-        }
-        if (!empty($attributes['backgroundColor'])) {
-            $style .= 'background-color:' . esc_attr($attributes['backgroundColor']) . ';';
-        }
-        if (isset($attributes['fontSize'])) {
-            $style .= 'font-size:' . esc_attr($attributes['fontSize']) . 'px;';
-        }
-        if (!empty($attributes['textAlign'])) {
-            $style .= 'text-align:' . esc_attr($attributes['textAlign']) . ';';
+        // Add any additional classes
+        $classes = 'smart-date-display';
+        if (!empty($class_name)) {
+            $classes .= ' ' . $class_name;
         }
         
-        // Font weight and style
-        if (isset($attributes['isBold']) && $attributes['isBold']) {
-            $style .= 'font-weight:bold;';
-        }
-        if (isset($attributes['isItalic']) && $attributes['isItalic']) {
-            $style .= 'font-style:italic;';
-        }
-        
-        // Spacing
-        if (isset($attributes['padding']) && is_numeric($attributes['padding'])) {
-            $style .= 'padding:' . esc_attr($attributes['padding']) . 'px;';
-        }
-        if (isset($attributes['margin']) && is_numeric($attributes['margin'])) {
-            $style .= 'margin:' . esc_attr($attributes['margin']) . 'px;';
-        }
-        
-        // Border
-        if (isset($attributes['borderWidth']) && $attributes['borderWidth'] > 0) {
-            $style .= 'border-width:' . esc_attr($attributes['borderWidth']) . 'px;';
-            $style .= 'border-style:solid;';
-            
-            if (!empty($attributes['borderColor'])) {
-                $style .= 'border-color:' . esc_attr($attributes['borderColor']) . ';';
-            } else {
-                $style .= 'border-color:#ddd;';
-            }
-        }
-        if (isset($attributes['borderRadius']) && is_numeric($attributes['borderRadius'])) {
-            $style .= 'border-radius:' . esc_attr($attributes['borderRadius']) . 'px;';
-        }
-        
-        // Output the styled date display
-        if (!empty($style)) {
-            return '<span class="smart-date-display" style="' . $style . '" data-timestamp="' . (strtotime($attributes['date']) ?: '') . '">' . $date_content . '</span>';
-        } else {
-            return '<span class="smart-date-display" data-timestamp="' . (strtotime($attributes['date']) ?: '') . '">' . $date_content . '</span>';
-        }
+        // Return formatted date with data attributes
+        return sprintf(
+            '<span class="%s" data-timestamp="%d" data-display-type="%s" data-prefix="%s" data-suffix="%s" data-locale="%s">%s</span>',
+            esc_attr($classes),
+            esc_attr($timestamp),
+            esc_attr($display_type),
+            esc_attr($prefix),
+            esc_attr($suffix),
+            esc_attr($locale),
+            $date_content
+        );
     }
 
     /**
-     * Converts a timestamp into a human-readable relative date string based on locale
+     * Format relative date string
      *
-     * @param int $timestamp The timestamp to convert
-     * @param string $format The date format to use for absolute display
-     * @param string $prefix Text to display before the date
-     * @param string $suffix Text to display after the date (usually "ago")
-     * @param string $locale The locale to use for translations
-     * @return string The formatted date string
+     * @param int $timestamp Timestamp
+     * @param string $prefix Text prefix
+     * @param string $suffix Text suffix
+     * @param string $locale Locale code
+     * @return string Formatted date
      */
-    public function format_relative_date($timestamp, $format, $prefix, $suffix, $locale) {
-        // Time units in English
-        $units = array(
-            'en' => array(
-                'second' => array('second', 'seconds'),
-                'minute' => array('minute', 'minutes'),
-                'hour' => array('hour', 'hours'),
-                'day' => array('day', 'days'),
-                'week' => array('week', 'weeks'),
-                'month' => array('month', 'months'),
-                'year' => array('year', 'years'),
-                'future' => 'Date is in the future',
-                'today' => 'Today',
-                'yesterday' => 'Yesterday'
-            ),
-            'sv' => array(
-                'second' => array('sekund', 'sekunder'),
-                'minute' => array('minut', 'minuter'),
-                'hour' => array('timme', 'timmar'),
-                'day' => array('dag', 'dagar'),
-                'week' => array('vecka', 'veckor'),
-                'month' => array('månad', 'månader'),
-                'year' => array('år', 'år'),
-                'future' => 'Datum är i framtiden',
-                'today' => 'Idag',
-                'yesterday' => 'Igår'
-            )
-            // Add more languages as needed
-        );
-
-        // Default to English if the specified locale isn't available
-        if (!isset($units[$locale])) {
-            $locale = 'en';
-        }
-
-        $time_difference = time() - $timestamp;
-        $seconds_in_a_day = 86400; // Number of seconds in a day
-        $seconds_in_an_hour = 3600;
-        $seconds_in_a_minute = 60;
-
-        // Build the output string
-        $output = $prefix ? $prefix . ' ' : '';
-
-        if ($time_difference < 0) {
-            return $output . $units[$locale]['future'];
-        } elseif ($time_difference < $seconds_in_a_day) {
-            if ($time_difference < $seconds_in_an_hour) {
-                if ($time_difference < $seconds_in_a_minute) {
-                    $seconds = $time_difference;
-                    $unit = ($seconds == 1) ? $units[$locale]['second'][0] : $units[$locale]['second'][1];
-                    $output .= "$seconds $unit";
-                } else {
-                    $minutes = floor($time_difference / $seconds_in_a_minute);
-                    $unit = ($minutes == 1) ? $units[$locale]['minute'][0] : $units[$locale]['minute'][1];
-                    $output .= "$minutes $unit";
-                }
-            } else {
-                $hours = floor($time_difference / $seconds_in_an_hour);
-                $unit = ($hours == 1) ? $units[$locale]['hour'][0] : $units[$locale]['hour'][1];
-                $output .= "$hours $unit";
-            }
-        } elseif ($time_difference < 2 * $seconds_in_a_day) {
-            $output .= $units[$locale]['yesterday'];
-        } elseif ($time_difference < 7 * $seconds_in_a_day) {
-            $days = floor($time_difference / $seconds_in_a_day);
-            $unit = ($days == 1) ? $units[$locale]['day'][0] : $units[$locale]['day'][1];
-            $output .= "$days $unit";
-        } elseif ($time_difference < 30 * $seconds_in_a_day) {
-            $weeks = floor($time_difference / (7 * $seconds_in_a_day));
-            $unit = ($weeks == 1) ? $units[$locale]['week'][0] : $units[$locale]['week'][1];
-            $output .= "$weeks $unit";
-        } elseif ($time_difference < 365 * $seconds_in_a_day) {
-            $months = floor($time_difference / (30 * $seconds_in_a_day));
-            $unit = ($months == 1) ? $units[$locale]['month'][0] : $units[$locale]['month'][1];
-            $output .= "$months $unit";
+    public function format_relative_date($timestamp, $prefix, $suffix, $locale) {
+        $time_diff = current_time('timestamp') - $timestamp;
+        
+        // Basic time units in seconds
+        $minute = 60;
+        $hour = 60 * $minute;
+        $day = 24 * $hour;
+        $week = 7 * $day;
+        $month = 30 * $day;
+        $year = 365 * $day;
+        
+        // Simple output for demonstration
+        $output = $prefix ? esc_html($prefix) . ' ' : '';
+        
+        if ($time_diff < 0) {
+            $output .= __('in the future', 'smart-date-display');
+        } elseif ($time_diff < $minute) {
+            $output .= __('just now', 'smart-date-display');
+        } elseif ($time_diff < $hour) {
+            $minutes = floor($time_diff / $minute);
+            $output .= sprintf(
+                _n('%d minute', '%d minutes', $minutes, 'smart-date-display'),
+                $minutes
+            );
+        } elseif ($time_diff < $day) {
+            $hours = floor($time_diff / $hour);
+            $output .= sprintf(
+                _n('%d hour', '%d hours', $hours, 'smart-date-display'),
+                $hours
+            );
+        } elseif ($time_diff < $week) {
+            $days = floor($time_diff / $day);
+            $output .= sprintf(
+                _n('%d day', '%d days', $days, 'smart-date-display'),
+                $days
+            );
+        } elseif ($time_diff < $month) {
+            $weeks = floor($time_diff / $week);
+            $output .= sprintf(
+                _n('%d week', '%d weeks', $weeks, 'smart-date-display'),
+                $weeks
+            );
+        } elseif ($time_diff < $year) {
+            $months = floor($time_diff / $month);
+            $output .= sprintf(
+                _n('%d month', '%d months', $months, 'smart-date-display'),
+                $months
+            );
         } else {
-            $years = floor($time_difference / (365 * $seconds_in_a_day));
-            $unit = ($years == 1) ? $units[$locale]['year'][0] : $units[$locale]['year'][1];
-            $output .= "$years $unit";
+            $years = floor($time_diff / $year);
+            $output .= sprintf(
+                _n('%d year', '%d years', $years, 'smart-date-display'),
+                $years
+            );
         }
-
-        // Add suffix if provided
-        if ($suffix) {
-            $output .= " $suffix";
+        
+        if ($suffix && $time_diff > 0) {
+            $output .= ' ' . esc_html($suffix);
         }
-
+        
         return $output;
     }
 
     /**
-     * Format date according to the specified format
+     * Format absolute date
      *
-     * @param int $timestamp The timestamp to format
-     * @param string $format The date format to use
-     * @param string $prefix Text to display before the date
-     * @param string $suffix Text to display after the date
-     * @return string The formatted date
+     * @param int $timestamp Timestamp
+     * @param string $format Date format
+     * @param string $prefix Text prefix
+     * @param string $suffix Text suffix
+     * @return string Formatted date
      */
     public function format_absolute_date($timestamp, $format, $prefix, $suffix) {
-        $output = $prefix ? $prefix . ' ' : '';
+        $output = $prefix ? esc_html($prefix) . ' ' : '';
         $output .= date_i18n($format, $timestamp);
         if ($suffix) {
-            $output .= " $suffix";
+            $output .= ' ' . esc_html($suffix);
         }
         return $output;
     }
 
     /**
-     * Shortcode function to convert a given timestamp or date string
+     * Shortcode handler
      *
      * @param array $atts Shortcode attributes
-     * @return string The formatted date string
+     * @return string Formatted date
      */
     public function relative_date_shortcode($atts) {
         $attributes = shortcode_atts(
             array(
                 'timestamp' => '',
                 'date' => '',
-                'display_type' => 'relative', // relative or absolute
-                'format' => 'Y-m-d H:i',      // PHP date format for absolute display
-                'prefix' => '',               // Text before the date
-                'suffix' => 'ago',            // Text after the date (for relative dates)
-                'locale' => 'en',             // Language for translations
+                'display_type' => 'relative',
+                'format' => 'F j, Y',
+                'prefix' => '',
+                'suffix' => 'ago',
+                'locale' => 'en',
             ),
-            $atts
+            $atts,
+            'relative_date'
         );
-
-        // If no timestamp or date attribute provided, use the post's published date
+        
+        // If no timestamp or date, use current post date or current time
         if (empty($attributes['timestamp']) && empty($attributes['date'])) {
             global $post;
-            if (!is_null($post)) {
+            if (isset($post->ID)) {
                 $attributes['timestamp'] = get_the_time('U', $post->ID);
+            } else {
+                $attributes['timestamp'] = current_time('timestamp');
             }
-        } elseif (!empty($attributes['date'])) {
+        } elseif (!empty($attributes['date']) && empty($attributes['timestamp'])) {
             $attributes['timestamp'] = strtotime($attributes['date']);
         }
-
-        // Validate the timestamp
-        if (!empty($attributes['timestamp']) && is_numeric($attributes['timestamp'])) {
-            if ($attributes['display_type'] === 'relative') {
-                return $this->format_relative_date(
-                    $attributes['timestamp'],
-                    $attributes['format'],
-                    $attributes['prefix'],
-                    $attributes['suffix'],
-                    $attributes['locale']
-                );
-            } else {
-                return $this->format_absolute_date(
-                    $attributes['timestamp'],
-                    $attributes['format'],
-                    $attributes['prefix'],
-                    $attributes['suffix']
-                );
-            }
+        
+        // Validate timestamp
+        if (!is_numeric($attributes['timestamp'])) {
+            return __('Invalid date', 'smart-date-display');
+        }
+        
+        // Format date based on display type
+        if ($attributes['display_type'] === 'relative') {
+            return $this->format_relative_date(
+                $attributes['timestamp'],
+                $attributes['prefix'],
+                $attributes['suffix'],
+                $attributes['locale']
+            );
         } else {
-            return 'Invalid timestamp or date';
+            return $this->format_absolute_date(
+                $attributes['timestamp'],
+                $attributes['format'],
+                $attributes['prefix'],
+                $attributes['suffix']
+            );
         }
     }
 }
 
 // Initialize the plugin
-$smart_date_display = new Smart_Date_Display();
+function smart_date_display() {
+    return Smart_Date_Display::get_instance();
+}
+
+// Start plugin
+smart_date_display();
